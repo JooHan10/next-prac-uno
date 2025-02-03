@@ -1,6 +1,8 @@
+import { fetchComments } from "@/api/comment";
 import { fetchPost, fetchPostList } from "@/api/post";
 import { PostDetail } from "@/domains/post/detail";
 import { GetStaticPaths, GetStaticPathsResult, GetStaticProps } from "next";
+import { notFound } from "next/navigation";
 import { ComponentProps, FC } from "react";
 
 type Params = { id: string };
@@ -33,13 +35,26 @@ export const getStaticProps: GetStaticProps<Props, Params> = async (
     return { notFound: true };
   }
 
-  const post = await fetchPost(id);
+  try {
+    const [post, comment_list] = await Promise.all([
+      fetchPost(id),
+      fetchComments(id),
+    ]);
 
-  return {
-    props: {
-      post,
-    },
-  };
+    // const post = await fetchPost(id);
+    // const comment_list = await fetchComments(id);
+
+    return {
+      props: {
+        post,
+        comment_list,
+      },
+    };
+  } catch (e) {
+    return {
+      notFound: true,
+    };
+  }
 };
 
 const PostDetailPage: FC<Props> = (props) => {
